@@ -18,6 +18,7 @@ where L: Lens<Target = Vec<T>>,
     where F: 'static + Fn(&mut Context, usize, ItemPtr<L,T>)
     {
 
+        println!("New Grid: {}", columns);
         // More or less everything in here should be done internally by vizia
 
         let parent = cx.current;
@@ -30,6 +31,7 @@ where L: Lens<Target = Vec<T>>,
 
         // Assign an id if one doesn't already exist but don't call `body`.
         let id = if let Some(id) = cx.tree.get_child(cx.current, cx.count) {
+            cx.views.insert(id, Box::new(list));
             id
         } else {
             let id = cx.entity_manager.create();
@@ -78,7 +80,8 @@ where L: Lens<Target = Vec<T>>,
             p: PhantomData::default(),
         };
 
-        handle.layout_type(LayoutType::Grid).row_between(Pixels(5.0)).col_between(Pixels(10.0))
+        handle.layout_type(LayoutType::Grid)
+        //.row_between(Pixels(5.0)).col_between(Pixels(10.0))
 
     }
 }
@@ -88,44 +91,44 @@ where L: 'static + Lens<Target = Vec<T>>
 {
     fn body(&mut self, cx: &mut Context) {
 
-        let builder = self.builder.take().unwrap();
+        if let Some(builder) = self.builder.clone() {
+            let mut found_store = None;
+    
+            'tree: for entity in cx.current.parent_iter(&cx.tree.clone()) {
+                if let Some(model_list) = cx.data.model_data.get(entity) {
+                    for (_, model) in model_list.iter() {
+                        if let Some(store) = model.downcast_ref::<Store<L::Source>>() {
+                            found_store = Some(store); 
+                            break 'tree;
+                        }
+                    }
+                }
+            };
+    
+            if let Some(store) = found_store {
+                
+                let len = self.lens.view(&store.data).len();
+    
+                cx.style.borrow_mut().grid_rows.insert(cx.current, vec![Pixels(30.0); self.rows]);
+                cx.style.borrow_mut().grid_cols.insert(cx.current, vec![Pixels(30.0); self.columns]);
+    
+                'loop_row: for row in 0..self.rows {
+                    for col in 0..self.columns {
+                        let index = row * self.columns + col;
+                        let ptr = ItemPtr::new(self.lens.clone(), index, row, col);
 
-        let mut found_store = None;
-
-        'tree: for entity in cx.current.parent_iter(&cx.tree.clone()) {
-            if let Some(model_list) = cx.data.model_data.get(entity) {
-                for (_, model) in model_list.iter() {
-                    if let Some(store) = model.downcast_ref::<Store<L::Source>>() {
-                        found_store = Some(store); 
-                        break 'tree;
+                        let columns = self.columns;
+                        let builder = builder.clone();
+                        HStack::new(cx, move |cx|{
+                            (builder)(cx, columns, ptr.clone());
+                        }).row_index(row).col_index(col);
+                        cx.count += 1;
                     }
                 }
             }
-        };
 
-        if let Some(store) = found_store {
-            
-            let len = self.lens.view(&store.data).len();
-
-            cx.style.borrow_mut().grid_rows.insert(cx.current, vec![Pixels(30.0); self.rows]);
-            cx.style.borrow_mut().grid_cols.insert(cx.current, vec![Pixels(30.0); self.columns]);
-
-            'loop_row: for row in 0..self.rows {
-                for col in 0..self.columns {
-                    let index = row * self.columns + col;
-                    if index >= len {
-                        break 'loop_row;
-                    }
-                    let ptr = ItemPtr::new(self.lens.clone(), index, row, col);
-                    let columns = self.columns;
-                    let builder = builder.clone();
-                    HStack::new(cx, move |cx|{
-                        (builder)(cx, columns, ptr.clone());
-                    }).row_index(row).col_index(col);
-                    cx.count += 1;
-                }
-            }
         }
+
 
     }
 }

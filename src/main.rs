@@ -2,7 +2,7 @@ use byteorder::{BigEndian, LittleEndian, ReadBytesExt};
 use vizia::*;
 
 mod model;
-use model::{AppEvent, Endian, HexData, Selection, Settings};
+use model::{AppEvent, Endian, HexData};
 
 mod grid;
 use grid::Grid;
@@ -12,163 +12,164 @@ fn main() {
 
         HexData::new().expect("Failed to load file").build(cx);
 
-        Selection {
-            data_len: 8 * 16,
-            columns: 8,
-            cursor: 0,
-            anchor: 0,
-            dragging: false,
-        }.build(cx);
+        // TODO - This doesn't work yet due to a problem with layout
+        // HStack::new(cx, |cx|{
+        //     Button::new(cx, |cx| cx.emit(AppEvent::SetColumns(4)), |cx|{
+        //         Label::new(cx, "4");
+        //     });
 
-        Settings {
-            endian: Endian::LittleEndian,
-        }.build(cx);
+        //     Button::new(cx, |cx| cx.emit(AppEvent::SetColumns(8)), |cx|{
+        //         Label::new(cx, "8");
+        //     });
+
+        //     Button::new(cx, |cx| cx.emit(AppEvent::SetColumns(16)), |cx|{
+        //         Label::new(cx, "16");
+        //     });
+        // }).height(Pixels(30.0));
+
+        //Button::new(cx, |cx| cx.emit(AppEvent::Test), |cx| {});
 
         KeyView::new(cx, |cx|{
-            HStack::new(cx, |cx|{
-                Grid::new(cx, 8, 16, HexData::view, |cx, columns, item|{
-                    Binding::new(cx, Selection::root, move |cx, selection|{
-                        let item_index = item.index();
-                        let select_start = selection.get(cx).start();
-                        let select_end = selection.get(cx).end();
-                        let is_dragging = selection.get(cx).dragging;
-                        Label::new(cx, &format!("{:02X}", item.value(cx)))
-                            .background_color(
-                                if item_index >= select_start && item_index <= select_end {
-                                    Color::rgb(153, 217, 234)
-                                } else {
-                                    Color::white()
-                                }
-                            )
-                            .size(Stretch(1.0))
-                            .child_space(Stretch(1.0))
-                            .on_press(cx, move |cx| {
-                                cx.emit(AppEvent::Selection(item_index));
-                                cx.emit(AppEvent::SelectionDrag);
-                            })
-                            .on_release(cx, move |cx| {
-                                cx.emit(AppEvent::SelectionDrop);
-                            })
-                            .on_hover(cx, move |cx| {
-                                if is_dragging {
-                                    cx.emit(AppEvent::SetCursor(item_index));
-                                }
-                            });
+            VStack::new(cx, |cx|{
+                HStack::new(cx, |cx|{
+
+                    // Offset Labels
+                    Binding::new(cx, HexData::view_start, |cx, data|{
+                        Label::new(cx, "Offset").width(Pixels(80.0)).font_size(18.0);
+                        ForEach::new(cx, 16, move |cx, index|{
+                            let view_start = *data.get(cx);
+                            Label::new(cx, &format!("{:08X}", view_start + index * 8)).width(Stretch(1.0));
+                        });
+                    }).width(Pixels(30.0)).top(Pixels(30.0));
+
+                    // Hex Grid
+                    VStack::new(cx, |cx|{
+                        Label::new(cx, "Hex Grid").font_size(18.0);
+                        //Binding::new(cx, Settings::columns, |cx, columns|{
+                            //let columns = *columns.get(cx); 
+               
+                            Grid::new(cx, 8, 16, HexData::view, |cx, columns, item|{
+                                Binding::new(cx, HexData::selection, move |cx, selection|{
+                                    let item_index = item.value(cx).0;
+                                    let select_start = selection.get(cx).start();
+                                    let select_end = selection.get(cx).end();
+                                    let is_dragging = selection.get(cx).dragging;
+                                    //println!("index {} start {} end: {}", item_index, select_start, select_end);
+                                    Label::new(cx, &format!("{:02X}", item.value(cx).1))
+                                    //Label::new(cx, &format!("{}", item.index()))
+                                        .background_color(
+                                            if item_index >= select_start && item_index <= select_end {
+                                                Color::rgb(153, 217, 234)
+                                            } else {
+                                                Color::white()
+                                            }
+                                        )
+                                        .size(Stretch(1.0))
+                                        .child_space(Stretch(1.0))
+                                        .on_press(cx, move |cx| {
+                                            cx.emit(AppEvent::Selection(item_index));
+                                            cx.emit(AppEvent::SelectionDrag);
+                                        })
+                                        .on_release(cx, move |cx| {
+                                            cx.emit(AppEvent::SelectionDrop);
+                                        })
+                                        .on_hover(cx, move |cx| {
+                                            if is_dragging {
+                                                cx.emit(AppEvent::SetCursor(item_index));
+                                            }
+                                        });
+                                });
+                            }).width(Pixels(30.0 * 8.0));
+                        //});
                     });
-                }).width(Pixels(40.0 * 8.0));
-    
-                // TODO - Factor into custom view to reduce duplication
-                Grid::new(cx, 8, 32, HexData::view, |cx, columns, item|{
-                    Binding::new(cx, Selection::root, move |cx, selection|{
-                        let item_index = item.index();
-                        let select_start = selection.get(cx).start();
-                        let select_end = selection.get(cx).end();
-                        let is_dragging = selection.get(cx).dragging;
-                        Label::new(cx, &if *item.value(cx) <= 32 {".".to_string()} else {format!("{}", *item.value(cx) as char)})
-                            .background_color(
-                                if item_index >= select_start && item_index <= select_end {
-                                    Color::rgb(153, 217, 234)
-                                } else {
-                                    Color::white()
-                                }
-                            )
-                            .size(Stretch(1.0))
-                            .child_space(Stretch(1.0))
-                            .on_press(cx, move |cx| {
-                                cx.emit(AppEvent::Selection(item_index));
-                                cx.emit(AppEvent::SelectionDrag);
-                            })
-                            .on_release(cx, move |cx| {
-                                cx.emit(AppEvent::SelectionDrop);
-                            })
-                            .on_hover(cx, move |cx| {
-                                if is_dragging {
-                                    cx.emit(AppEvent::SetCursor(item_index));
-                                }
+        
+                    // TODO - Factor into custom view to reduce duplication
+                    // Text Grid
+                    VStack::new(cx, |cx|{
+                        Label::new(cx, "Decoded Text").font_size(18.0);
+                        Grid::new(cx, 8, 16, HexData::view, |cx, columns, item|{
+                            Binding::new(cx, HexData::selection, move |cx, selection|{
+                                let item_index = item.value(cx).0;
+                                let select_start = selection.get(cx).start();
+                                let select_end = selection.get(cx).end();
+                                let is_dragging = selection.get(cx).dragging;
+                                Label::new(cx, &if item.value(cx).1 <= 32 {".".to_string()} else {format!("{}", item.value(cx).1 as char)})
+                                    .background_color(
+                                        if item_index >= select_start && item_index <= select_end {
+                                            Color::rgb(153, 217, 234)
+                                        } else {
+                                            Color::white()
+                                        }
+                                    )
+                                    .size(Stretch(1.0))
+                                    .child_space(Stretch(1.0))
+                                    .on_press(cx, move |cx| {
+                                        cx.emit(AppEvent::Selection(item_index));
+                                        cx.emit(AppEvent::SelectionDrag);
+                                    })
+                                    .on_release(cx, move |cx| {
+                                        cx.emit(AppEvent::SelectionDrop);
+                                    })
+                                    .on_hover(cx, move |cx| {
+                                        if is_dragging {
+                                            cx.emit(AppEvent::SetCursor(item_index));
+                                        }
+                                    });
                             });
+                        }).width(Pixels(30.0 * 8.0));
                     });
-                }).width(Pixels(40.0 * 8.0));
+                    
+                    // Inspector
+                    VStack::new(cx, |cx|{
+                        Label::new(cx, "Inspector").font_size(18.0);
+                        Binding::new(cx, HexData::inspector, |cx, inspector|{
+                                    
+                            let num_i8 = inspector.get(cx).num_i8;
+                            let num_u8 = inspector.get(cx).num_u8;
+                            let num_i16 = inspector.get(cx).num_i16;
+                            let num_u16 = inspector.get(cx).num_u16;
+                            let num_i32 = inspector.get(cx).num_i32;
+                            let num_u32 = inspector.get(cx).num_u32;
 
-                Binding::new(cx, HexData::view, |cx, data|{
-                    Binding::new(cx, Selection::root, move |cx, selection|{
-                        Binding::new(cx, Settings::endian, move |cx, endian|{
-
-                            
-                            let select_start = selection.get(cx).start();
-                            let select_end = selection.get(cx).end();
-                            let endian = endian.get(cx);
-
-                            let num = &data.get(cx)[select_start..select_end+1];
-                            let num_u8 = num[0] as u8;
-                            let num_i8 = num[0] as i8;
-
-                            let num_i16 = if select_end - select_start >= 1 {
-                                match *endian {
-                                    Endian::BigEndian => {
-                                        (&num[0..2]).read_i16::<BigEndian>().unwrap().to_string()
-                                    }
-
-                                    Endian::LittleEndian => {
-                                        (&num[0..2]).read_i16::<LittleEndian>().unwrap().to_string()
-                                    }
-                                }
-                            } else {
-                                "-".to_string()
-                            };
-                            
-                            
                             VStack::new(cx, move |cx|{
                             
                                 HStack::new(cx, move |cx|{
                                     Label::new(cx, "i8").width(Pixels(50.0));
-                                    Element::new(cx).width(Pixels(1.0)).background_color(Color::black());
-                                    if let Some(num) = data.get(cx).get(select_start) {
-                                        Label::new(cx, &num_i8.to_string()); 
-                                    }
-                                }).height(Pixels(30.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                    Label::new(cx, &num_i8.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                }).height(Pixels(30.0));
 
                                 HStack::new(cx, move |cx|{
                                     Label::new(cx, "u8").width(Pixels(50.0));
-                                    Element::new(cx).width(Pixels(1.0)).background_color(Color::black());
-                                    if let Some(num) = data.get(cx).get(select_start) {
-                                        Label::new(cx, &num_u8.to_string()); 
-                                    }
-                                }).height(Pixels(30.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                    Label::new(cx, &num_u8.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                }).height(Pixels(30.0));
 
-                                let num_i16 = num_i16.clone();
                                 HStack::new(cx, move |cx|{
                                     Label::new(cx, "i16").width(Pixels(50.0));
-                                    Element::new(cx).width(Pixels(1.0)).background_color(Color::black());
-                                    Label::new(cx, &num_i16); 
-                                }).height(Pixels(30.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                    Label::new(cx, &num_i16.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                }).height(Pixels(30.0));
 
-                                // HStack::new(cx, move |cx|{
-                                //     Label::new(cx, "u16").width(Pixels(50.0));
-                                //     Element::new(cx).width(Pixels(1.0)).background_color(Color::black());
-                                //     if select_end - select_start >= 1 {
-                                //         let num = &data.get(cx)[select_start..select_end+1];
-                                //         let num_i16 = (&num[0..2]).read_u16::<BigEndian>().expect("Failed to read u16");
-                                //         Label::new(cx, &num_i16.to_string()); 
-                                //     } else {
-                                //         Label::new(cx, "-"); 
-                                //     }
-                                    
-                                // }).height(Pixels(30.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                HStack::new(cx, move |cx|{
+                                    Label::new(cx, "u16").width(Pixels(50.0));
+                                    Label::new(cx, &num_u16.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                }).height(Pixels(30.0));
 
-                                // HStack::new(cx, move |cx|{
-                                //     Label::new(cx, "i32").width(Pixels(50.0));
-                                //     Element::new(cx).width(Pixels(1.0)).background_color(Color::black());
-                                //     if select_end - select_start >= 3 {
-                                //         let num = &data.get(cx)[select_start..select_end+1];
-                                //         let num_i16 = (&num[0..4]).read_u16::<BigEndian>().expect("Failed to read u16");
-                                //         Label::new(cx, &num_i16.to_string()); 
-                                //     } else {
-                                //         Label::new(cx, "-"); 
-                                //     }
-                                    
-                                // }).height(Pixels(30.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                HStack::new(cx, move |cx|{
+                                    Label::new(cx, "i32").width(Pixels(50.0));
+                                    Label::new(cx, &num_i32.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black()); 
+                                }).height(Pixels(30.0));
 
-                                Binding::new(cx, Settings::endian, |cx, endian|{
+                                HStack::new(cx, move |cx|{
+                                    Label::new(cx, "u32").width(Pixels(50.0));
+                                    Label::new(cx, &num_u32.to_string())
+                                        .width(Stretch(1.0)).border_width(Pixels(1.0)).border_color(Color::black());
+                                }).height(Pixels(30.0));
+
+                                Binding::new(cx, HexData::endian, |cx, endian|{
                                     HStack::new(cx, move |cx|{
                                         Checkbox::new(cx, *endian.get(cx) == Endian::LittleEndian)
                                             .on_checked(cx, |cx| cx.emit(AppEvent::SetLittleEndian))
@@ -184,9 +185,27 @@ fn main() {
                             }).row_between(Pixels(5.0));
                         });
                     });
-                });
+    
+                }).child_space(Pixels(30.0)).col_between(Pixels(30.0));
 
-            }).child_space(Pixels(30.0)).col_between(Pixels(30.0));
+                Element::new(cx).height(Pixels(1.0)).background_color(Color::black());
+
+                // Footer
+                Binding::new(cx, HexData::selection, |cx, selection|{
+                    
+                    let select_start = selection.get(cx).start();
+                    let select_end = selection.get(cx).end();
+
+                    HStack::new(cx, move |cx|{
+                        Label::new(cx, &format!("Offset: {}", select_start));
+                        if select_start != select_end {
+                            Label::new(cx, &format!("Length: {}", select_end + 1 - select_start));
+                        } else {
+                            Label::new(cx, "");
+                        }
+                    });
+                }).height(Pixels(30.0)).background_color(Color::white());
+            });
 
 
         });
@@ -242,6 +261,22 @@ impl View for KeyView {
 
                         Code::ArrowUp => {
                             cx.emit(AppEvent::SelectionUp);
+                        }
+
+                        Code::PageDown => {
+                            if cx.modifiers.contains(Modifiers::CTRL) {
+                                cx.emit(AppEvent::SelectionEnd);
+                            } else {
+                                cx.emit(AppEvent::SelectionPageDown);
+                            }
+                        }
+
+                        Code::PageUp => {
+                            if cx.modifiers.contains(Modifiers::CTRL) {
+                                cx.emit(AppEvent::SelectionStart);
+                            } else {
+                                cx.emit(AppEvent::SelectionPageUp);
+                            }
                         }
 
                         _=> {}
