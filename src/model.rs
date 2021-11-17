@@ -126,13 +126,12 @@ impl HexData {
 }
 
 impl Model for HexData {
-    fn event(&mut self, cx: &mut Context, event: &mut Event) -> bool {
+    fn event(&mut self, cx: &mut Context, event: &mut Event) {
         
         if let Some(app_event) = event.message.downcast() {
             match app_event {
                 AppEvent::Test => {
                     self.next_line();
-                    return true;
                 }
 
                 AppEvent::Selection(index) => {
@@ -140,13 +139,10 @@ impl Model for HexData {
                     self.selection.cursor = *index;
 
                     self.calc_inspector();
-
-                    return true;
                 }
 
                 AppEvent::SetCursor(index) => {
                     self.selection.cursor = *index;
-                    return true;
                 }
 
                 AppEvent::SelectionRight => {
@@ -163,8 +159,6 @@ impl Model for HexData {
                     }
 
                     self.calc_inspector();
-
-                    return true;
                 }
 
                 AppEvent::SelectionLeft => {
@@ -179,8 +173,6 @@ impl Model for HexData {
                     }
 
                     self.calc_inspector();
-                    
-                    return true;
                 }
 
                 AppEvent::SelectionUp => {
@@ -196,8 +188,6 @@ impl Model for HexData {
                     }
 
                     self.calc_inspector();
-
-                    return true;
                 }
 
                 AppEvent::SelectionDown => {
@@ -213,8 +203,6 @@ impl Model for HexData {
                     }
 
                     self.calc_inspector();
-
-                    return true;
                 }
 
                 // TODO
@@ -226,40 +214,34 @@ impl Model for HexData {
 
                 AppEvent::SelectionDrag => {
                     self.selection.dragging = true;
-                    return true;
                 }
 
                 AppEvent::SelectionDrop => {
                     self.selection.dragging = false;
-                    return true;
                 }
 
                 AppEvent::SetColumns(columns) => {
                     self.selection.columns = *columns;
-                    return true;
                 }
 
                 AppEvent::SetLittleEndian => {
                     self.endian = Endian::LittleEndian;
                     self.calc_inspector();
-                    return true;
                 }
 
                 AppEvent::SetBigEndian => {
                     self.endian = Endian::BigEndian;
                     self.calc_inspector();
-                    return true;
                 }
 
                 _=> {}
             }
         }
-
-        return false;
     }
 }
 
 // Selection is separate from `HexData` or else updating the selection would rebuild the grids
+#[derive(Clone, Data)]
 pub struct Selection {
     pub data_len: usize,
     pub columns: usize,
@@ -278,7 +260,7 @@ impl Selection {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Data)]
 pub struct Inspector {
     pub num_i8: i8,
     pub num_u8: u8,
@@ -288,7 +270,7 @@ pub struct Inspector {
     pub num_u32: u32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Data)]
 pub enum Endian {
     BigEndian,
     LittleEndian,
