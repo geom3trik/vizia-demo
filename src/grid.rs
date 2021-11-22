@@ -122,7 +122,7 @@ where L: 'static + Lens<Target = Vec<T>>
                         HStack::new(cx, move |cx|{
                             (builder)(cx, columns, ptr.clone());
                         }).row_index(row).col_index(col);
-                        cx.count += 1;
+                        //cx.count += 1;
                     }
                 }
             }

@@ -34,11 +34,13 @@ fn main() {
                 HStack::new(cx, |cx|{
 
                     // Offset Labels
-                    Binding::new(cx, HexData::view_start, |cx, data|{
-                        Label::new(cx, "Offset").width(Pixels(80.0)).font_size(18.0);
-                        ForEach::new(cx, 16, move |cx, index|{
-                            let view_start = *data.get(cx);
-                            Label::new(cx, &format!("{:08X}", view_start + index * 8)).width(Stretch(1.0));
+                    VStack::new(cx, |cx|{
+                        Binding::new(cx, HexData::view_start, |cx, data|{
+                            Label::new(cx, "Offset").width(Pixels(80.0)).font_size(18.0);
+                            ForEach::new(cx, 16, move |cx, index|{
+                                let view_start = *data.get(cx);
+                                Label::new(cx, &format!("{:08X}", view_start + index * 8)).width(Stretch(1.0));
+                            });
                         });
                     }).width(Pixels(30.0)).top(Pixels(30.0));
 
@@ -54,6 +56,7 @@ fn main() {
                                     let select_start = selection.get(cx).start();
                                     let select_end = selection.get(cx).end();
                                     let is_dragging = selection.get(cx).dragging;
+                                    //println!("Item Index: {} {}", select_start, select_end);
                                     //println!("index {} start {} end: {}", item_index, select_start, select_end);
                                     Label::new(cx, &format!("{:02X}", item.value(cx).1))
                                     //Label::new(cx, &format!("{}", item.index()))
@@ -67,6 +70,7 @@ fn main() {
                                         .size(Stretch(1.0))
                                         .child_space(Stretch(1.0))
                                         .on_press(cx, move |cx| {
+                                            println!("{}", item_index);
                                             cx.emit(AppEvent::Selection(item_index));
                                             cx.emit(AppEvent::SelectionDrag);
                                         })
@@ -179,8 +183,8 @@ fn main() {
                                             .on_checked(cx, |cx| cx.emit(AppEvent::SetBigEndian))
                                             .on_unchecked(cx, |cx| cx.emit(AppEvent::SetBigEndian));
                                         Label::new(cx, "Big Endian");
-                                    }).child_top(Stretch(1.0)).child_bottom(Stretch(1.0));
-                                }).height(Pixels(30.0));
+                                    }).child_top(Stretch(1.0)).child_bottom(Stretch(1.0)).height(Pixels(30.0));
+                                });
 
                             }).row_between(Pixels(5.0));
                         });
@@ -203,8 +207,8 @@ fn main() {
                         } else {
                             Label::new(cx, "");
                         }
-                    });
-                }).height(Pixels(30.0)).background_color(Color::white());
+                    }).height(Pixels(30.0)).background_color(Color::white());
+                });
             });
 
 
