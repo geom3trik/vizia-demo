@@ -8,7 +8,8 @@ mod grid;
 use grid::Grid;
 
 fn main() {
-    Application::new(|cx|{
+    let window_description = WindowDescription::new();
+    Application::new(window_description, |cx|{
 
         HexData::new().expect("Failed to load file").build(cx);
 
@@ -37,7 +38,7 @@ fn main() {
                     VStack::new(cx, |cx|{
                         Binding::new(cx, HexData::view_start, |cx, data|{
                             Label::new(cx, "Offset").width(Pixels(80.0)).font_size(18.0);
-                            ForEach::new(cx, 16, move |cx, index|{
+                            ForEach::new(cx, 0..16, move |cx, index|{
                                 let view_start = *data.get(cx);
                                 Label::new(cx, &format!("{:08X}", view_start + index * 8)).width(Stretch(1.0));
                             });

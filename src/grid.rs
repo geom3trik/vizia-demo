@@ -1,4 +1,4 @@
-use std::{collections::HashSet, marker::PhantomData, rc::Rc};
+use std::{collections::HashSet, marker::PhantomData, rc::Rc, any::TypeId};
 
 use vizia::*;
 
@@ -12,7 +12,9 @@ where L: Lens<Target = Vec<T>>,
 }
 
 impl<L, T> Grid<L,T> 
-where L: Lens<Target = Vec<T>>,
+where 
+    L: Lens<Target = Vec<T>>,
+    T: Data,
 {
     pub fn new<F>(cx: &mut Context, columns: usize, rows: usize, lens: L, builder: F) -> Handle<Self> 
     where F: 'static + Fn(&mut Context, usize, ItemPtr<L,T>)
@@ -45,18 +47,32 @@ where L: Lens<Target = Vec<T>>,
         cx.count += 1;
 
         // Add this view as an observer to the lensed model
-        let mut ancestors = HashSet::new();
-        for entity in parent.parent_iter(&cx.tree) {
-            ancestors.insert(entity);
+        let ancestors = parent.parent_iter(&cx.tree).collect::<HashSet<_>>();
 
-            if let Some(model_list) = cx.data.model_data.get_mut(entity) {
-                for (_, model) in model_list.iter_mut() {
-                    if let Some(store) = model.downcast::<Store<L::Source>>() {
-                        if store.observers.intersection(&ancestors).next().is_some() {
-                            break;
+        for entity in id.parent_iter(&cx.tree) {
+            if let Some(model_data_store) = cx.data.model_data.get_mut(entity) {
+                if let Some(model_data) = model_data_store.data.get(&TypeId::of::<L::Source>()) {
+                    if let Some(lens_wrap) = model_data_store.lenses.get_mut(&TypeId::of::<L>()) {
+                        let observers = lens_wrap.observers();
+
+                        if ancestors.intersection(observers).next().is_none() {
+                            lens_wrap.add_observer(id);
                         }
-                        store.insert_observer(id);
+                    } else {
+                        let mut observers = HashSet::new();
+                        observers.insert(id);
+
+                        let model = model_data.downcast_ref::<Store<L::Source>>().unwrap();
+
+                        let old = lens.view(&model.data);
+
+                        model_data_store.lenses.insert(
+                            TypeId::of::<L>(),
+                            Box::new(StateStore { entity: id, lens, old: old.clone(), observers }),
+                        );
                     }
+
+                    break;
                 }
             }
         }
@@ -96,7 +112,7 @@ where L: 'static + Lens<Target = Vec<T>>
     
             'tree: for entity in cx.current.parent_iter(&cx.tree.clone()) {
                 if let Some(model_list) = cx.data.model_data.get(entity) {
-                    for (_, model) in model_list.iter() {
+                    for (_, model) in model_list.data.iter() {
                         if let Some(store) = model.downcast_ref::<Store<L::Source>>() {
                             found_store = Some(store); 
                             break 'tree;
