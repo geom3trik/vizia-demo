@@ -1,7 +1,7 @@
 name: Continuous deployment
 on:
   workflow_run:
-    branches: [test]
+    branches: [temp]
     workflows: [Continuous integration]
     types: [completed]
 
