@@ -30,10 +30,12 @@ impl Model for AppData {
                 }
 
                 AppEvent::AddItem => {
-                    self.todo_items.push(TodoItem{
-                        done: false,
-                        text: self.new_item.clone(),
-                    })
+                    if !self.new_item.is_empty() {
+                        self.todo_items.push(TodoItem{
+                            done: false,
+                            text: self.new_item.clone(),
+                        })
+                    }
                 },
 
                 AppEvent::DeleteItem(index) => {
