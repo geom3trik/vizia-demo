@@ -4,7 +4,9 @@ pub mod app_data;
 pub use app_data::*;
 
 fn main() {
-    let window_description = WindowDescription::new().with_title("Todos Application");
+    let window_description = WindowDescription::new()
+        .with_title("Todos Application")
+        .with_canvas("win");
     let app = Application::new(window_description, |cx|{
 
         #[cfg(debug_assertions)]
