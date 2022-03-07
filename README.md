@@ -1,2 +1,2 @@
-# vizia_demo
-Demo project for the VIZIA GUI framework
+# Vizia Demo
+A simple todo list application demo project for the [Vizia GUI framework](https://github.com/vizia/vizia)

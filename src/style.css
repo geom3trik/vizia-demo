@@ -1,0 +1,27 @@
+list {
+    background-color: #c8c8c8;
+    child-space: 10px;
+    row-between: 10px;
+    width: 1s;
+    height: 1s;
+}
+
+.item {
+    height: auto;
+    background-color: white;
+    child-space: 10px;
+    border-radius: 5px;
+    outer-shadow: 2 2 2 #00000044;
+    overflow: visible;
+}
+
+.item>hstack {
+    height: auto;
+    child-top: 1s;
+    child-bottom: 1s;
+    col-between: 10px;
+}
+
+textbox {
+    min-width: 50px;
+}
