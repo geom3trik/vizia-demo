@@ -2,9 +2,7 @@ name: Continuous deployment
 on:
   workflow_run:
     branches: [temp]
-    workflows: [Continuous integration]
-    types: [completed]
-
+    
 jobs:
   release:
     runs-on: ubuntu-latest
