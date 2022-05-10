@@ -25,8 +25,10 @@ list {
 textbox {
     min-width: 50px;
     width: 1s;
+    height: 30px;
 }
 
 button.add label {
     width: 100px;
+    height: 30px;
 }

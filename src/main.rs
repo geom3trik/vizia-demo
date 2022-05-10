@@ -1,13 +1,10 @@
-use vizia::*;
+use vizia::prelude::*;
 
 pub mod app_data;
 pub use app_data::*;
 
 fn main() {
-    let window_description = WindowDescription::new()
-        .with_title("Todos Application")
-        .with_canvas("win");
-    let app = Application::new(window_description, |cx|{
+    Application::new(|cx|{
 
         #[cfg(debug_assertions)]
         cx.add_stylesheet("src/style.css");
@@ -51,7 +48,8 @@ fn main() {
             .class("item");
         });
 
-    });
-
-    app.run();
+    })
+    .title("Todos Application")
+    .canvas("win")
+    .run();
 }
