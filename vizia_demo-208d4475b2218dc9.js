@@ -299,7 +299,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('vizia_demo-383edcf4ac5411ab_bg.wasm', import.meta.url);
+        input = new URL('vizia_demo-208d4475b2218dc9_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
