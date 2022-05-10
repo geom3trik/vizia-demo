@@ -15,13 +15,18 @@ fn main() {
             todo_items: vec![
                 TodoItem {
                     done: false,
-                    text: "Finish vizia demo".to_string(),
+                    text: "Finish vizia demo".to_owned(),
                 },
 
                 TodoItem {
                     done: false,
-                    text: "Finish vizia book".to_string(),
+                    text: "Finish vizia book".to_owned(),
                 },
+
+                TodoItem {
+                    done: false,
+                    text: "Think of a better demo".to_owned(),
+                }
             ],
             new_item: "".to_string(),
         }.build(cx);
