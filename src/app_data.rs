@@ -1,4 +1,3 @@
-
 use vizia::prelude::*;
 
 #[derive(Lens)]
@@ -21,7 +20,7 @@ pub enum AppEvent {
 }
 
 impl Model for AppData {
-    fn event(&mut self, cx: &mut Context, event: &mut Event) {
+    fn event(&mut self, cx: &mut EventContext, event: &mut Event) {
         event.map(|app_event, _| match app_event {
             AppEvent::NewItem(text) => {
                 self.new_item = text.clone();
@@ -29,16 +28,16 @@ impl Model for AppData {
 
             AppEvent::AddItem => {
                 if !self.new_item.is_empty() {
-                    self.todo_items.push(TodoItem{
+                    self.todo_items.push(TodoItem {
                         done: false,
                         text: self.new_item.clone(),
                     })
                 }
-            },
+            }
 
             AppEvent::DeleteItem(index) => {
                 self.todo_items.remove(*index);
-            },
+            }
 
             AppEvent::ToggleDone(index) => {
                 self.todo_items[*index].done ^= true;
