@@ -3,6 +3,8 @@ name = "vizia_demo"
 version = "0.1.0"
 edition = "2021"
 
+[workspace]
+
 
 [dependencies]
 vizia = {git = "https://github.com/vizia/vizia"}

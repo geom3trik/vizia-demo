@@ -1,0 +1,22 @@
+name: Continuous deployment
+on: [push]
+jobs:
+  release:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions-rs/toolchain@v1
+          with:
+            toolchain: stable
+            target: wasm32-unknown-unknown
+
+        - uses: jetli/trunk-action@v0.1.0
+        - uses: jetli/wasm-bindgen-action@v0.1.0
+
+        - uses: actions/checkout@v2
+
+        - run: trunk build --release
+        
+        - uses: JamesIves/github-pages-deploy-action@v4.3.0
+          with:
+            branch: gh-pages
+            folder: ./dist

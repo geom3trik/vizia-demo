@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    canvas {
+        padding: 0;
+        margin: auto;
+        display: block;
+        width: 800px;
+    }
+  </style>
+  
+</head>
+
+<body>
+  <canvas id="win" width="800px" height="600px"></canvas>
+  <script type="module">
+    import init from "./vizia_demo.js";
+    window.addEventListener("load", () => {
+      init();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,5 +1,4 @@
 list {
-    background-color: #c8c8c8;
     child-space: 10px;
     row-between: 10px;
     width: 1s;
@@ -8,7 +7,7 @@ list {
 
 .item {
     height: auto;
-    background-color: white;
+    background-color: #f9f9f9;
     child-space: 10px;
     border-radius: 5px;
     outer-shadow: 2 2 2 #00000044;
@@ -23,5 +22,13 @@ list {
 }
 
 textbox {
-    min-width: 50px;
+    width: 1s;
+    height: 30px;
+    child-top: 1s;
+    child-bottom: 1s;
+}
+
+button.add label {
+    width: 100px;
+    height: 30px;
 }
